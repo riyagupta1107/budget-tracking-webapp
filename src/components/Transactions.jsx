@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import AddTransaction from './AddTransaction';
 
-function Transactions({ onTotalsUpdate }) {
+function Transactions({ userId, onTotalsUpdate }) {
+  const storageKey = `transactions_${userId}`;
   const [transactions, setTransactions] = useState(() => {
 
     // if localStorage has saved transactions, it parses and sets them as state.
-    const saved = localStorage.getItem('transactions');
+    const saved = localStorage.getItem(storageKey);
 
     if (saved) {
       return JSON.parse(saved);
@@ -39,7 +40,7 @@ function Transactions({ onTotalsUpdate }) {
 
   // Save to localStorage whenever transactions change
   useEffect(() => {
-    localStorage.setItem('transactions', JSON.stringify(transactions));
+    localStorage.setItem(storageKey, JSON.stringify(transactions));
     updateTotals(transactions);
   }, [transactions]);
 

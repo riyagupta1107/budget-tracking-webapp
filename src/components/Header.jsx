@@ -1,14 +1,16 @@
-import React from 'react'
+import React from 'react';
+import { auth } from '../firebase';
 // import bell from './assets/bell 1.png'
 
-function Header({income, expense}) {
+function Header({income, expense, displayName}) {
+    const user = auth.currentUser;
     const balance = income - expense;
   return (
     <div>
         <div className='bg-gradient-to-b from-card via-greenCustom to-bgCustom flex flex-col w-full h-[35rem] px-10 py-20'>
 
-            <p className='text-customLightText text-lg font-medium font-inter p-0.5'>Good Afternoon,</p>
-            <p className=' text-customLightText text-4xl font-semibold font-inter p-0.5'>Riya Gupta</p>
+            <p className='text-customLightText text-lg font-medium font-inter p-0.5'>Hello,</p>
+            <p className=' text-customLightText text-4xl font-semibold font-inter p-0.5'>{displayName || 'User'}</p>
             {/*<img src={bell} className='h-[23.33px] w-[23.33px]'/> */}
             <div className='bg-card h-[16rem] mt-16 border border-none rounded-3xl shadow-lg'>
                 <div className='py-6 px-10 text-customLightText font-inter'>
