@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AddTransaction from './AddTransaction';
 
 function Transactions({ userId, onTotalsUpdate }) {
-  const storageKey = `transactions_${userId}`;
-  const [transactions, setTransactions] = useState(() => {
-
-    // if localStorage has saved transactions, it parses and sets them as state.
-    const saved = localStorage.getItem(storageKey);
-
-    if (saved) {
-      return JSON.parse(saved);
-    } else {
-      // Otherwise, it starts with an empty list.
-      return [];
-
-    }
-  });
-  // Controls visibility of the Add Transaction modal.
+  const [transactions, setTransactions] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    if (userId) {
+      const storageKey = `transactions_${userId}`;
+      const saved = localStorage.getItem(storageKey);
+
+      if (saved) {
+        setTransactions(JSON.parse(saved));
+      } else {
+        setTransactions([]);
+      }
+    }
+  }, [userId]);   // re-renders when user id changes
+
+  // Controls visibility of the Add Transaction modal.
 
   // Update totals for header
   const updateTotals = (txList) => {
@@ -28,20 +30,18 @@ function Transactions({ userId, onTotalsUpdate }) {
     onTotalsUpdate({ income, expense });
   };
 
-  // Load saved transactions on mount
-  // useEffect(() => {
-  //   const saved = localStorage.getItem('transactions');
-  //   if (saved) {
-  //     const parsed = JSON.parse(saved);
-  //     setTransactions(parsed);
-  //     updateTotals(parsed);
-  //   }
-  // }, []);
-
   // Save to localStorage whenever transactions change
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(transactions));
-    updateTotals(transactions);
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (userId) {
+      const storageKey = `transactions_${userId}`;
+      localStorage.setItem(storageKey, JSON.stringify(transactions));
+      updateTotals(transactions);
+    }
+    
   }, [transactions]);
 
   const addTransaction = (newTx) => {
@@ -49,6 +49,11 @@ function Transactions({ userId, onTotalsUpdate }) {
     // const updated = [...transactions, newTx];
     setTransactions([...transactions, transWithId]);
     // updateTotals(updated);
+  };
+
+  const handleDelete = (transactionId) => {
+    const updatedTransactions = transactions.filter(tx => tx.id !== transactionId);
+    setTransactions(updatedTransactions);
   };
 
   return (
@@ -59,8 +64,11 @@ function Transactions({ userId, onTotalsUpdate }) {
 
       <div className='px-6'>
         {transactions.length === 0 ? (
-          <p className='text-gray-400 italic'>No transactions yet.</p>
-        ) : (
+        <div className="text-center text-gray-500 italic mt-10">
+          <p>No transactions yet.</p>
+          <p>Click <span className="font-semibold text-greenCustom">+ Add Transaction</span> to begin.</p>
+        </div>
+          ) : (
           <ul className='space-y-2'>
             {transactions.map((tx) => (
               <li key={tx.id}className='bg-white shadow p-3 rounded-md'>
@@ -69,9 +77,13 @@ function Transactions({ userId, onTotalsUpdate }) {
                     <p className='font-semibold'>{tx.title}</p>
                     <p className='text-sm text-gray-500'>{tx.date}</p>
                   </div>
-                  <p className={`font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
-                    {tx.type === 'income' ? '+' : '-'}${tx.amount.toFixed(2)}
-                  </p>
+                  <div>
+                    <p className={`font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
+                      {tx.type === 'income' ? '+' : '-'}${tx.amount.toFixed(2)}
+                    </p>
+                    <button onClick={() => handleDelete(tx.id)} className="text-red-500 hover:text-red-700 text-xs ml-2 bg-gray"> Delete </button>
+                  </div>
+                  
                 </div>
               </li>
             ))}
